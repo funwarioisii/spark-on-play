@@ -1,1 +1,2 @@
 GET    /hello    controllers.HelloController.index
+GET    /graph    controllers.GraphController.index
