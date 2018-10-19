@@ -31,10 +31,6 @@ object Graphing {
 
   val graph = Graph(users, relationships)
 
-  println(graph.vertices.filter { case (id, (name, pos)) => pos == "postdoc" }.count)
-  println(graph.edges.filter(e => e.srcId > e.dstId).count)
-
-
   def edges : String = graph.edges.foreach{f => f.toString}.toString
 }
 
