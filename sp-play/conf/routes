@@ -1,2 +1,7 @@
 GET    /hello    controllers.HelloController.index
+GET    /fuga     controllers.HelloController.getMethod
+
 GET    /graph    controllers.GraphController.index
+GET    /api/index    controllers.GraphController.index
+GET    /api/callable    controllers.GraphController.getCallableNodes
+GET    /api/edgedata    controllers.GraphController.getGraphData
