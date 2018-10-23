@@ -7,7 +7,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 object Graphing {
   val conf = new SparkConf(false)
-    .setMaster(s"local[2]")
+    .setMaster(s"local[1]")
     .setAppName("graph")
     .set("spark.logConf", "true")
 
@@ -51,27 +51,39 @@ object Graphing {
   }
 
   // 各Edgeに対するパラメータ
+  // Edge(src, dst, (key, prob))
   private val edgeData = pairs.map{
     f: (Long, Long) =>
-      Edge(f._1, f._2, s"${f._1}_to_${f._2}")
+      Edge(f._1, f._2, (s"${f._1}_to_${f._2}", 0.0f))
   }
 
   // Edgeの生成
-  private val edge: RDD[Edge[String]] = sc.parallelize(edgeData)
+  private val edge: RDD[Edge[(String, Float)]] = sc.parallelize(edgeData)
 
-  private val graph = Graph(nodes, edge)
+  private var graph = Graph(nodes, edge)
 
 
   def getNodes: RDD[(VertexId, String)] = nodes
 
-  def getEdges: RDD[Edge[String]] = edge
+  def getEdges: RDD[Edge[(String, Float)]] = edge
 
-  def getGraph: Graph[String, String] = graph
+  def getGraph: Graph[String, (String, Float)] = graph
 
-  def getGraphData(src: VertexId, dst: VertexId): String = graph.edges.filter{
-    case Edge(srcId, dstId, _) =>
-      srcId == src && dstId == dst
-  }.first().attr
+  /**
+    * ある地点からある地点へのEdgeのパラメータを返す
+    * @param src
+    * @param dst
+    * @return
+    */
+  def getEdgeData(src: VertexId, dst: VertexId): (String, Float) =
+    graph
+      .edges
+      .filter{
+        case Edge(srcId, dstId, (_, _)) =>
+          srcId == src && dstId == dst
+      }
+      .first
+      .attr
 
   /**
     * 初期位置から接続可能な場所を返す
@@ -94,16 +106,21 @@ object Graphing {
         case Edge(srcId, _, _) =>
           srcId == id
       }
-      .collect()
       .map{
         case Edge(_, dstId, _) =>
           dstId.toLong
       }
+      .collect()
       .toList
 
-  def getReward(srcId: Long, dstId: Long) :Float = {
+  def updateProb(src: Long, dst: Long, prob: Float): Unit = {
+    // I couldn't realize update a param of edge, so reset edge data, edge and assign graph.
+    edgeData
+      .filter{case Edge(srcId, dstId, attr) => srcId==src && dstId==dst}
+      .foreach(f => f.attr=(f.attr._1, prob))
+    val edge: RDD[Edge[(String, Float)]] = sc.parallelize(edgeData)
 
-    return 0.0f
+    graph = Graph(nodes, edge)
   }
 
 
@@ -114,13 +131,7 @@ object Graphing {
   def main(args: Array[String]): Unit = {
     println(getCallableNodes)
     println(getCallableNodes(310L))
+    updateProb(310L, 320L, 0.5f)
+    println(graph.edges.filter(f => f.dstId == 320L && f.srcId==310L).collect().head.attr._2)
   }
 }
-
-
-
-
-
-
-
-
