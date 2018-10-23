@@ -23,4 +23,8 @@ class HelloController @Inject()(cc: ControllerComponents) extends AbstractContro
       Ok("No message to you")
     }
   }
+
+  def routeing = Action{_ =>
+    Redirect("0.0.0.0:4040")
+  }
 }

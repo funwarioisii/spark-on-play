@@ -1,5 +1,6 @@
 GET    /hello    controllers.HelloController.index
 GET    /fuga     controllers.HelloController.getMethod
+GET    /         controllers.HelloController.routeing
 
 GET    /graph    controllers.GraphController.index
 GET    /api/index    controllers.GraphController.index
